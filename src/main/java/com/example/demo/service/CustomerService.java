@@ -1,0 +1,4 @@
+package com.example.demo.service;
+@Service
+public class CustomerService {
+}

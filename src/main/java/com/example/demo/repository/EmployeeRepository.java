@@ -18,4 +18,21 @@ public interface EmployeeRepository extends JpaRepository< Employees, Long> {
             "SET branch_id = 99 " +
             "WHERE branch_id = :oldBranchId", nativeQuery = true)
     void shipEmployeesToBranch99(@Param("oldBranchId") Long oldBranchId);
+
+    @Query(value = "SELECT e.employee_id " +
+            "FROM employees e " +
+            "LEFT JOIN loans l ON e.employee_id = l.employee_id " +
+            "WHERE e.status = 'Working' AND e.branch_id = :branchId " +
+            "GROUP BY e.employee_id " +
+            "ORDER BY COUNT(l.loan_id) ASC " +
+            "LIMIT 1", nativeQuery = true)
+    Long findingLeastContractSameBranch(@Param("branchId") Long branchId);
+
+    @Modifying
+    @Query(value = "UPDATE employees SET status = 'INACTIVE' WHERE employee_id = :empId", nativeQuery = true)
+    void softDeleteEmployee(@Param("empId") Long empId);
+
+
+
+
 }

@@ -9,6 +9,7 @@ import java.util.List;
 @Entity
 @Table(name = "repayment_schedules")
 @Getter @Setter
+@Builder
 @NoArgsConstructor @AllArgsConstructor
 public class RepaymentSchedule {
 
@@ -43,4 +44,5 @@ public class RepaymentSchedule {
 
     @OneToMany(mappedBy = "repaymentSchedule", cascade = CascadeType.ALL)
     private List<Payment> payments;
+
 }

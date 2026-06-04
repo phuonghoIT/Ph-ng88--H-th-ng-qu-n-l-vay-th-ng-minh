@@ -10,4 +10,5 @@ public interface CustomersRepository extends JpaRepository<Customers, Long> {
 
     // Trả về Optional để tránh lỗi NullPointerException nếu không tìm thấy khách hàng
     Optional<Customers> findByIdentityNumber(String identityNumber);
+    boolean existsByIdentityNumber(String identityNumber);
 }

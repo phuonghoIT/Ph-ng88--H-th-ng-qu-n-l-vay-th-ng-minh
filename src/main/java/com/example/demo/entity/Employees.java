@@ -1,5 +1,7 @@
 package com.example.demo.entity;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Entity
@@ -10,15 +12,16 @@ import lombok.*;
 public class Employees {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @NotNull
     @Column(name = "employee_id")
     private Long employeeId;
-
+    @NotBlank(message = "Tên nhân viên không được để trống")
     @Column(name = "full_name")
     private String fullName;
-
+    @NotBlank(message = "Vai trò nhân viên không được để trống")
     @Column(name ="role")
     private String role;
-
+    @NotBlank(message = "Trạng thái nhân viên không được để trống")
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private EmployeeStatus status = EmployeeStatus.ACTIVE;

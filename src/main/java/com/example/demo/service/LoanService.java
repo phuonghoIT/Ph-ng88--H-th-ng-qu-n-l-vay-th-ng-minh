@@ -21,6 +21,19 @@ public class LoanService {
     @Autowired
     private LoanRepository loanRepository;
 
+    public List<Loan> getAllLoans() {
+        return loanRepository.findAll();
+    }
+
+    public Loan getLoanById(Long id) {
+        return loanRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("🔴 LỖI: Không tìm thấy khoản vay có ID là " + id));
+    }
+
+    public List<Loan> getLoansByCustomerId(Long customerId) {
+        return loanRepository.findByCustomerId(customerId);
+    }
+
     @Autowired
     private LoanProductRepository loanProductRepository;
 

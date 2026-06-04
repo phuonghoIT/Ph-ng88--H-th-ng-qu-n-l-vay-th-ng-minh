@@ -18,6 +18,15 @@ public class PaymentService {
     @Autowired
     private PaymentRepository paymentRepository;
 
+    public List<Payment> getAllPayments() {
+        return paymentRepository.findAll();
+    }
+
+    public Payment getPaymentById(Long id) {
+        return paymentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("🔴 LỖI: Không tìm thấy giao dịch thanh toán có ID là " + id));
+    }
+
     @Autowired
     private RepaymentScheduleRepository scheduleRepository;
 

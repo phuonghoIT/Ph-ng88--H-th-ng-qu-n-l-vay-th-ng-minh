@@ -12,7 +12,6 @@ import lombok.*;
 public class Employees {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @NotNull
     @Column(name = "employee_id")
     private Long employeeId;
     @NotBlank(message = "Tên nhân viên không được để trống")

@@ -13,7 +13,6 @@ public class Branches {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @NotNull
     @Column(name = "branch_id")
     private Long branchId;
     @NotBlank(message = "Tên chi nhánh không được để trống!")

@@ -1,6 +1,8 @@
 package com.example.demo.controller;
 
+import com.example.demo.entity.Branches;
 import com.example.demo.entity.Employees;
+import com.example.demo.repository.EmployeeRepository;
 import com.example.demo.service.EmployeeService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -17,6 +20,9 @@ public class EmployeeController {
 
     @Autowired
     private EmployeeService employeeService;
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
 
     /**
      * 🟢 1 & 2. LẤY DANH SÁCH NHÂN VIÊN VÀ BỘ LỌC THEO CHI NHÁNH
@@ -78,5 +84,24 @@ public class EmployeeController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
+    }
+    @PostMapping("/{bulk}")
+    public ResponseEntity<?> createMultipleEmployees(@Valid @RequestBody List<Employees> employeeList) {
+        // (Lưu ý: Nếu file Entity của em tên là Employees thì đổi chữ Branches thành Employees nhé)
+
+        // Gọi Repository hoặc Service để lưu cả cụm
+        List<Employees> savedList = new ArrayList<>();
+
+        // 2. Dùng vòng lặp chạy qua từng ông nhân viên gửi từ Postman lên
+        for (Employees emp : employeeList) {
+            // Gọi hàm save() truyền thống của Repository để ném từng ông xuống DB
+            Employees savedEmp = employeeRepository.save(emp);
+
+            // Lưu xong thì nhét ông đó vào danh sách kết quả
+            savedList.add(savedEmp);
+        }
+
+        // 3. Trả về mã 201 Created kèm cả đội quân nhân viên đã có ID tự tăng dưới DB
+        return new ResponseEntity<>(savedList, HttpStatus.CREATED);
     }
 }

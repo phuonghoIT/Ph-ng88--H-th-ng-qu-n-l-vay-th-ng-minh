@@ -1,0 +1,20 @@
+$kind: http-request
+name: Create Loan Product
+method: POST
+url: '{{baseUrl}}/api/loan-products'
+order: 3000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "Gói vay tiêu dùng 12 tháng",
+      "interestRate": 0.0850,
+      "penaltyRate": 0.0200,
+      "durationMonths": 12
+    }
+  options:
+    raw:
+      language: json

@@ -33,7 +33,7 @@ public class Payment {
     // Nhân viên tiếp nhận/duyệt khoản tiền này [cite: 42]
     @ManyToOne
     @JoinColumn(name = "employee_id", nullable = false)
-    private Employees employee;
+    private Employee employee;
 
 
 }

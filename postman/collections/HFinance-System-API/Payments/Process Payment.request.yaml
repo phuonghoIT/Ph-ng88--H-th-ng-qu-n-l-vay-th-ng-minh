@@ -1,0 +1,21 @@
+$kind: http-request
+name: Process Payment
+method: POST
+url: '{{baseUrl}}/api/payments'
+order: 3000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "amount": 5000000,
+      "paymentDate": "2026-06-05",
+      "paymentMethod": "Chuyển khoản",
+      "repaymentSchedule": {"scheduleId": 1},
+      "employee": {"employeeId": 1}
+    }
+  options:
+    raw:
+      language: json

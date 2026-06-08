@@ -1,0 +1,20 @@
+$kind: http-request
+name: Update Loan Product
+method: PUT
+url: '{{baseUrl}}/api/loan-products/{{loanProductId}}'
+order: 4000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "Gói vay tiêu dùng 12 tháng (Updated)",
+      "interestRate": 0.0800,
+      "penaltyRate": 0.0150,
+      "durationMonths": 12
+    }
+  options:
+    raw:
+      language: json

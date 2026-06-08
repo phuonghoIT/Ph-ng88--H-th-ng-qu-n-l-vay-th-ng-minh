@@ -2,14 +2,13 @@ package com.example.demo.entity; // Thay bằng package chuẩn của em
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Entity
 @Table(name = "branches")
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
-public class Branches {
+public class Branch {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

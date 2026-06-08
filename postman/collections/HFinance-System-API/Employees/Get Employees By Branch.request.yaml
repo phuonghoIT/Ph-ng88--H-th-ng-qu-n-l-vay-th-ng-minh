@@ -1,0 +1,8 @@
+$kind: http-request
+name: Get Employees By Branch
+method: GET
+url: '{{baseUrl}}/api/employees'
+order: 2000
+queryParams:
+  - key: branchId
+    value: '{{branchId}}'

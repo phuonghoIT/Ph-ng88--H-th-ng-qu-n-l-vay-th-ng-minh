@@ -1,0 +1,20 @@
+$kind: http-request
+name: Update Employee
+method: PUT
+url: '{{baseUrl}}/api/employees/{{employeeId}}'
+order: 5000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "fullName": "Trần Thị B (Updated)",
+      "role": "Senior Loan Officer",
+      "status": "ACTIVE",
+      "branch": {"branchId": 1}
+    }
+  options:
+    raw:
+      language: json

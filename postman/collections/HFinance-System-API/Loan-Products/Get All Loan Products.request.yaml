@@ -1,0 +1,5 @@
+$kind: http-request
+name: Get All Loan Products
+method: GET
+url: '{{baseUrl}}/api/loan-products'
+order: 1000

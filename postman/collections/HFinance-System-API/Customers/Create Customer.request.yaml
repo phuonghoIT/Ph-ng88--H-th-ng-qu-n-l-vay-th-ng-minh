@@ -1,0 +1,25 @@
+$kind: http-request
+name: Create Customer
+method: POST
+url: '{{baseUrl}}/api/customers'
+order: 4000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "fullName": "Nguyễn Văn A",
+      "address": "123 Đường ABC, TP.HCM",
+      "sdt": "0901234567",
+      "identityNumber": "037106001234",
+      "job": "Kỹ sư phần mềm",
+      "user": {
+        "username": "nguyenvana",
+        "password": "password123"
+      }
+    }
+  options:
+    raw:
+      language: json

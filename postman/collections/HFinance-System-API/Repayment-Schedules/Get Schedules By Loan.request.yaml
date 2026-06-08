@@ -1,0 +1,8 @@
+$kind: http-request
+name: Get Schedules By Loan
+method: GET
+url: '{{baseUrl}}/api/repayment-schedules'
+order: 1000
+queryParams:
+  - key: loanId
+    value: '{{loanId}}'

@@ -1,4 +1,5 @@
 package com.example.demo.entity;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -9,7 +10,7 @@ import lombok.*;
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 
-public class Employees {
+public class Employee {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "employee_id")
@@ -20,12 +21,16 @@ public class Employees {
     @NotBlank(message = "Vai trò nhân viên không được để trống")
     @Column(name ="role")
     private String role;
-    @NotBlank(message = "Trạng thái nhân viên không được để trống")
+    @NotNull(message = "Trạng thái nhân viên không được để trống")
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private EmployeeStatus status = EmployeeStatus.ACTIVE;
 
     @ManyToOne
     @JoinColumn(name = "branch_id", nullable = false)
-    private Branches branch;
+    private Branch branch;
+
+    @OneToOne(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("employee") // Chặn vòng lặp vô tận khi Jackson sinh JSON
+    private User user;
 }

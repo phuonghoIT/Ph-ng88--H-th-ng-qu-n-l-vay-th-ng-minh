@@ -1,0 +1,8 @@
+$kind: http-request
+name: Search Customer By CCCD
+method: GET
+url: '{{baseUrl}}/api/customers/search'
+order: 3000
+queryParams:
+  - key: cccd
+    value: '{{cccd}}'

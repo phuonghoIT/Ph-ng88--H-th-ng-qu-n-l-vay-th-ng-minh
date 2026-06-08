@@ -6,6 +6,8 @@ import com.example.demo.repository.LoanProductRepository;
 import com.example.demo.repository.LoanRepository;
 import com.example.demo.repository.RepaymentScheduleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,7 +47,7 @@ public class LoanService {
         // 1. Tìm khoản vay cũ đang nằm im trong Database (Tương đương biến OLD trong Trigger)
         Loan oldLoan = loanRepository.findById(loanId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy khoản vay!"));
-        if (oldLoan.getStatus().equals("CLOSED")) {
+        if (oldLoan.getStatus() == LoanStatus.PAID) {
             throw new RuntimeException("🔴 LỖI: Khoản vay đã tất toán xong, không được phép thay đổi trạng thái!");
         }
 
@@ -54,6 +56,21 @@ public class LoanService {
 
         // 3. Bắn lệnh lưu xuống DB mượt mà
         return loanRepository.save(oldLoan);
+    }
+
+    public List<Loan> getMyLoans() {
+        // 1. Bốc thông tin Principal (đối tượng chứng thực) từ bộ nhớ gác cổng của Spring
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        String username;
+        if (principal instanceof UserDetails) {
+            username = ((UserDetails) principal).getUsername();
+        } else {
+            username = principal.toString();
+        }
+
+        // 2. Gọi Repository quét xuống DB lọc đúng ID của ông này
+        return loanRepository.findByCustomer_User_Username(username);
     }
 
     @Transactional

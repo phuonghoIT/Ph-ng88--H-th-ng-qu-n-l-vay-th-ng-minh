@@ -1,0 +1,22 @@
+$kind: http-request
+name: Update Customer
+method: PUT
+url: '{{baseUrl}}/api/customers/{{customerId}}'
+order: 5000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "fullName": "Nguyễn Văn A (Updated)",
+      "address": "456 Đường XYZ, TP.HCM",
+      "sdt": "0901234568",
+      "identityNumber": "037106001234",
+      "creditScore": 750,
+      "job": "Kỹ sư phần mềm"
+    }
+  options:
+    raw:
+      language: json

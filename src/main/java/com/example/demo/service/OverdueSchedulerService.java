@@ -1,6 +1,6 @@
 package com.example.demo.service;
 
-import com.example.demo.entity.Customers;
+import com.example.demo.entity.Customer;
 import com.example.demo.entity.RepaymentSchedule;
 import com.example.demo.entity.ScheduleStatus;
 import com.example.demo.repository.CustomersRepository;
@@ -59,7 +59,7 @@ public class OverdueSchedulerService {
             // 3. TRỪ THẲNG TAY 20 ĐIỂM TÍN DỤNG CỦA KHÁCH HÀNG
             // Kiểm tra xem kỳ hạn này có phải vừa mới quá hạn vào ngày hôm qua hay không (để chỉ trừ điểm 1 lần duy nhất)
             if (schedule.getDueDate().equals(today.minusDays(1))) {
-                Customers customer = schedule.getLoan().getCustomer();
+                Customer customer = schedule.getLoan().getCustomer();
                 int currentScore = customer.getCreditScore();
 
                 // Trừ 20 điểm nhưng không được để điểm tụt xuống dưới 0

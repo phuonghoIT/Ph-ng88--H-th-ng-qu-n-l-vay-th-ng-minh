@@ -1,0 +1,8 @@
+$kind: http-request
+name: Update Loan Status
+method: PATCH
+url: '{{baseUrl}}/api/loans/{{loanId}}/status'
+order: 5000
+queryParams:
+  - key: status
+    value: ACTIVE

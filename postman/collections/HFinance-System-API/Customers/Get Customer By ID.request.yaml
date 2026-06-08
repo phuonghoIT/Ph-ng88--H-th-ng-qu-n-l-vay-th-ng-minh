@@ -1,0 +1,5 @@
+$kind: http-request
+name: Get Customer By ID
+method: GET
+url: '{{baseUrl}}/api/customers/{{customerId}}'
+order: 2000

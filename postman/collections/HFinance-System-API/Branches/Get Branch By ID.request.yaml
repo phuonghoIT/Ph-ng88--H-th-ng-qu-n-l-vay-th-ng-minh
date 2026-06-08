@@ -1,0 +1,5 @@
+$kind: http-request
+name: Get Branch By ID
+method: GET
+url: '{{baseUrl}}/api/branches/{{branchId}}'
+order: 2000

@@ -1,0 +1,22 @@
+$kind: http-request
+name: Create Loan
+method: POST
+url: '{{baseUrl}}/api/loans'
+order: 4000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "amount": 50000000,
+      "loanDate": "2026-06-01",
+      "loanType": "UNSECURED",
+      "customer": {"customerId": 1},
+      "employee": {"employeeId": 1},
+      "loanProduct": {"loanProductId": 1}
+    }
+  options:
+    raw:
+      language: json

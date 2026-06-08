@@ -1,0 +1,5 @@
+$kind: http-request
+name: Get My Loans
+method: GET
+url: '{{baseUrl}}/api/loans/my-loans'
+order: 6000

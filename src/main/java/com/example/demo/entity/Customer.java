@@ -1,8 +1,11 @@
 package com.example.demo.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 
 @Entity
 @Table(name = "customers")
@@ -37,4 +40,9 @@ public class Customer {
     @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL)
     @JsonIgnoreProperties("customer")// CascadeType.ALL cực kỳ quan trọng ở đây!
     private User user;
+
+    // 🌟 SỬA LỖI: Thêm mối quan hệ Một-Nhiều sang Khoản vay
+    @OneToMany(mappedBy = "customer")
+    @JsonIgnore // 👈 Ngắt vòng lặp JSON tại đây
+    private List<Loan> loans;
 }

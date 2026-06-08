@@ -1,0 +1,24 @@
+$kind: http-request
+name: Create Employee
+method: POST
+url: '{{baseUrl}}/api/employees'
+order: 4000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "fullName": "Trần Thị B",
+      "role": "Loan Officer",
+      "status": "ACTIVE",
+      "branch": {"branchId": 1},
+      "user": {
+        "username": "tranthib",
+        "password": "password123"
+      }
+    }
+  options:
+    raw:
+      language: json

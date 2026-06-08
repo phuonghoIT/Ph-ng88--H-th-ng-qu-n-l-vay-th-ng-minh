@@ -1,9 +1,8 @@
 package com.example.demo.controller;
 
-import com.example.demo.entity.Branches;
+import com.example.demo.entity.Branch;
 import com.example.demo.service.BranchService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +23,8 @@ public class BranchController {
      * GET http://localhost:8080/api/branches
      */
     @GetMapping
-    public ResponseEntity<List<Branches>> getAllBranches() {
-        List<Branches> branches = branchService.getAllBranches();
+    public ResponseEntity<List<Branch>> getAllBranches() {
+        List<Branch> branches = branchService.getAllBranches();
 
         // Thùng hàng thành công: Nhãn 200 OK + Ruột là danh sách chi nhánh
         return ResponseEntity.ok(branches);
@@ -38,7 +37,7 @@ public class BranchController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getBranchById(@PathVariable Long id) {
         try {
-            Branches branch = branchService.getBranchById(id);
+            Branch branch = branchService.getBranchById(id);
             return ResponseEntity.ok(branch);
         } catch (RuntimeException e) {
             // Nếu không tìm thấy ID, dán nhãn 400 Bad Request + câu báo lỗi
@@ -52,9 +51,9 @@ public class BranchController {
      * Body gửi lên: Cục JSON chứa thông tin chi nhánh
      */
     @PostMapping
-    public ResponseEntity<?> createBranch(@Valid @RequestBody Branches newBranch) {
+    public ResponseEntity<?> createBranch(@Valid @RequestBody Branch newBranch) {
         try {
-            Branches savedBranch = branchService.createBranch(newBranch);
+            Branch savedBranch = branchService.createBranch(newBranch);
 
             // Tạo mới thành công: Dán nhãn 201 CREATED + Ruột là chi nhánh mới đẻ
             return ResponseEntity.status(HttpStatus.CREATED).body(savedBranch);
@@ -70,10 +69,10 @@ public class BranchController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateBranch(
             @PathVariable Long id,
-            @Valid @RequestBody Branches updatedData
+            @Valid @RequestBody Branch updatedData
     ) {
         try {
-            Branches result = branchService.updateBranch(id, updatedData);
+            Branch result = branchService.updateBranch(id, updatedData);
             return ResponseEntity.ok(result);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

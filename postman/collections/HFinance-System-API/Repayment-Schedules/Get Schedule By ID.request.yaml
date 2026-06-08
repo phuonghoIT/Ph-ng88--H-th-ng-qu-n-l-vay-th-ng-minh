@@ -1,0 +1,5 @@
+$kind: http-request
+name: Get Schedule By ID
+method: GET
+url: '{{baseUrl}}/api/repayment-schedules/{{scheduleId}}'
+order: 2000

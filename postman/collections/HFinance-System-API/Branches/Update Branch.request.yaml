@@ -1,0 +1,19 @@
+$kind: http-request
+name: Update Branch
+method: PUT
+url: '{{baseUrl}}/api/branches/{{branchId}}'
+order: 4000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "branchName": "Chi nhánh Hà Nội (Updated)",
+      "address": "456 Phố Huế, Hà Nội",
+      "phone": "0241234568"
+    }
+  options:
+    raw:
+      language: json

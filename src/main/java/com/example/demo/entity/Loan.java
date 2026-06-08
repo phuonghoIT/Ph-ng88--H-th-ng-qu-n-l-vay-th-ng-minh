@@ -1,5 +1,6 @@
 package com.example.demo.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -21,6 +22,7 @@ public class Loan {
     private BigDecimal amount; // Số tiền vay [cite: 14]
 
     @Column(name = "loan_date", nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate loanDate; // Ngày vay [cite: 22]
 
     @Enumerated(EnumType.STRING)
@@ -34,12 +36,12 @@ public class Loan {
     // Khóa ngoại trỏ sang bảng Customers (Người vay) [cite: 21, 79]
     @ManyToOne
     @JoinColumn(name = "customer_id", nullable = false)
-    private Customers customer;
+    private Customer customer;
 
     // Khóa ngoại trỏ sang bảng Staff (Nhân viên quản lý) [cite: 20, 80]
     @ManyToOne
     @JoinColumn(name = "employee_id", nullable = false)
-    private Employees employee;
+    private Employee employee;
 
     // Khóa ngoại trỏ sang bảng LoanProducts (Gói vay áp dụng) [cite: 23, 155]
     @ManyToOne

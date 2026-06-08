@@ -1,6 +1,6 @@
 package com.example.demo.repository;
 
-import com.example.demo.entity.Employees;
+import com.example.demo.entity.Employee;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -12,9 +12,9 @@ import java.util.List;
 
 
 @Repository
-public interface EmployeeRepository extends JpaRepository<Employees, Long> {
+public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
-    List<Employees> findByBranchBranchId(Long branchId);
+    List<Employee> findByBranchBranchId(Long branchId);
 
     @Transactional
     @Modifying

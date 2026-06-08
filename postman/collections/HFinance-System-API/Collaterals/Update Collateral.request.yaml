@@ -1,0 +1,20 @@
+$kind: http-request
+name: Update Collateral
+method: PUT
+url: '{{baseUrl}}/api/collaterals/{{collateralId}}'
+order: 4000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "assetType": "Xe ô tô",
+      "estimatedValue": 300000000,
+      "conversionRate": 0.6000,
+      "loan": {"loanId": 1}
+    }
+  options:
+    raw:
+      language: json

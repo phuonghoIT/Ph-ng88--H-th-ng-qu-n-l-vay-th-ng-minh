@@ -1,6 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.entity.Customers; // Khớp với tên Entity viết hoa của em
+import com.example.demo.entity.Customer; // Khớp với tên Entity viết hoa của em
 import com.example.demo.service.CustomerService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +23,8 @@ public class CustomerController {
      * GET http://localhost:8080/api/customers
      */
     @GetMapping
-    public ResponseEntity<List<Customers>> getAllCustomers() {
-        List<Customers> list = customerService.getAllCustomers();
+    public ResponseEntity<List<Customer>> getAllCustomers() {
+        List<Customer> list = customerService.getAllCustomers();
         return ResponseEntity.ok(list);
     }
 
@@ -35,7 +35,7 @@ public class CustomerController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getCustomerById(@PathVariable Long id) {
         try {
-            Customers customer = customerService.getCustomerById(id);
+            Customer customer = customerService.getCustomerById(id);
             return ResponseEntity.ok(customer);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -47,9 +47,9 @@ public class CustomerController {
      * POST http://localhost:8080/api/customers
      */
     @PostMapping
-    public ResponseEntity<?> createCustomer(@Valid @RequestBody Customers newCustomer) {
+    public ResponseEntity<?> createCustomer(@Valid @RequestBody Customer newCustomer) {
         try {
-            Customers saved = customerService.createCustomer(newCustomer);
+            Customer saved = customerService.createCustomerWithAccount(newCustomer);
             return ResponseEntity.status(HttpStatus.CREATED).body(saved);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -63,10 +63,10 @@ public class CustomerController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateCustomer(
             @PathVariable Long id,
-            @Valid @RequestBody Customers updatedData
+            @Valid @RequestBody Customer updatedData
     ) {
         try {
-            Customers result = customerService.updateCustomer(id, updatedData);
+            Customer result = customerService.updateCustomer(id, updatedData);
             return ResponseEntity.ok(result);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -80,7 +80,7 @@ public class CustomerController {
     @GetMapping("/search")
     public ResponseEntity<?> getCustomerByIdentityNumber(@RequestParam("cccd") String cccd) {
         try {
-            Customers customer = customerService.getCustomerByIdentityNumber(cccd);
+            Customer customer = customerService.getCustomerByIdentityNumber(cccd);
             // Tìm thấy thì dán nhãn 200 OK và nhét hồ sơ khách vào ruột thùng hàng
             return ResponseEntity.ok(customer);
         } catch (RuntimeException e) {

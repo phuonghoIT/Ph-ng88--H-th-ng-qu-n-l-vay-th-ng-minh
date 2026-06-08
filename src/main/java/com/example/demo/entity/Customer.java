@@ -1,5 +1,6 @@
 package com.example.demo.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -7,7 +8,7 @@ import lombok.*;
 @Table(name = "customers")
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
-public class Customers {
+public class Customer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,4 +32,9 @@ public class Customers {
 
     @Column(name = "job")
     private String job; // Nghề nghiệp
+
+    // Bên trong file Customers.java
+    @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("customer")// CascadeType.ALL cực kỳ quan trọng ở đây!
+    private User user;
 }

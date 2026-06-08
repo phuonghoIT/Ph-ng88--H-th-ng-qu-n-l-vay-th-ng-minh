@@ -10,6 +10,7 @@ import java.util.List;
 
 @Repository
 public interface LoanRepository extends JpaRepository<Loan, Long> {
+    List<Loan> findByCustomer_User_Username(String username);
 
     // Tìm các khoản vay dựa vào ID khách hàng
     @Query("SELECT l FROM Loan l WHERE l.customer.customerId = :customerId")

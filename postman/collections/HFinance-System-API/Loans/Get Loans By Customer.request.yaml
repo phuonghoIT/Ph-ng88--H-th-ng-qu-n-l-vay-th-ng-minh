@@ -1,0 +1,8 @@
+$kind: http-request
+name: Get Loans By Customer
+method: GET
+url: '{{baseUrl}}/api/loans'
+order: 2000
+queryParams:
+  - key: customerId
+    value: '{{customerId}}'

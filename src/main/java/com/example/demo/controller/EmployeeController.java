@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
-import com.example.demo.entity.Employees;
+import com.example.demo.entity.Employee;
+import com.example.demo.repository.EmployeeRepository;
 import com.example.demo.service.EmployeeService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -17,6 +19,9 @@ public class EmployeeController {
 
     @Autowired
     private EmployeeService employeeService;
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
 
     /**
      * 🟢 1 & 2. LẤY DANH SÁCH NHÂN VIÊN VÀ BỘ LỌC THEO CHI NHÁNH
@@ -25,7 +30,7 @@ public class EmployeeController {
      * Dùng required = false để báo cho Java biết tham số sau dấu ? có thể có hoặc không.
      */
     @GetMapping
-    public ResponseEntity<List<Employees>> getEmployees(@RequestParam(required = false) Long branchId) {
+    public ResponseEntity<List<Employee>> getEmployees(@RequestParam(required = false) Long branchId) {
         if (branchId != null) {
             // Nếu có truyền branchId, gọi Service lọc theo chi nhánh
             return ResponseEntity.ok(employeeService.getEmployeesByBranch(branchId));
@@ -41,7 +46,7 @@ public class EmployeeController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getEmployeeById(@PathVariable Long id) {
         try {
-            Employees employee = employeeService.getEmployeeById(id);
+            Employee employee = employeeService.getEmployeeById(id);
             return ResponseEntity.ok(employee);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -54,12 +59,13 @@ public class EmployeeController {
      * Cần @Valid để kích hoạt chip gác cổng dữ liệu rác trong Entity Employee
      */
     @PostMapping
-    public ResponseEntity<?> createEmployee(@Valid @RequestBody Employees newEmployee) {
+    public ResponseEntity<?> createEmployee(@Valid @RequestBody Employee newEmployee) {
         try {
-            Employees savedEmployee = employeeService.createEmployee(newEmployee);
+            Employee savedEmployee = employeeService.createEmployeeWithAccount(newEmployee);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedEmployee);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
 
@@ -70,13 +76,32 @@ public class EmployeeController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateEmployee(
             @PathVariable Long id,
-            @Valid @RequestBody Employees updatedData
+            @Valid @RequestBody Employee updatedData
     ) {
         try {
-            Employees result = employeeService.updateEmployee(id, updatedData);
+            Employee result = employeeService.updateEmployee(id, updatedData);
             return ResponseEntity.ok(result);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
+    }
+    @PostMapping("/bulk")
+    public ResponseEntity<?> createMultipleEmployees(@Valid @RequestBody List<Employee> employeeList) {
+        // (Lưu ý: Nếu file Entity của em tên là Employees thì đổi chữ Branches thành Employees nhé)
+
+        // Gọi Repository hoặc Service để lưu cả cụm
+        List<Employee> savedList = new ArrayList<>();
+
+        // 2. Dùng vòng lặp chạy qua từng ông nhân viên gửi từ Postman lên
+        for (Employee emp : employeeList) {
+            // Gọi hàm save() truyền thống của Repository để ném từng ông xuống DB
+            Employee savedEmp = employeeRepository.save(emp);
+
+            // Lưu xong thì nhét ông đó vào danh sách kết quả
+            savedList.add(savedEmp);
+        }
+
+        // 3. Trả về mã 201 Created kèm cả đội quân nhân viên đã có ID tự tăng dưới DB
+        return new ResponseEntity<>(savedList, HttpStatus.CREATED);
     }
 }

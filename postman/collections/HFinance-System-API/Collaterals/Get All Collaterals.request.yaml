@@ -1,0 +1,5 @@
+$kind: http-request
+name: Get All Collaterals
+method: GET
+url: '{{baseUrl}}/api/collaterals'
+order: 1000

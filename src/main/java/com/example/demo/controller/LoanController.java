@@ -50,11 +50,12 @@ public class LoanController {
      * POST http://localhost:8080/api/loans
      */
     @PostMapping
-    public ResponseEntity<?> createLoan(@Valid @RequestBody Loan newLoan) {
+    public ResponseEntity<?> createLoan( @RequestBody Loan newLoan) {
         try {
             Loan saved = loanService.createLoanAndGenerateSchedule(newLoan);
             return ResponseEntity.status(HttpStatus.CREATED).body(saved);
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
@@ -74,5 +75,11 @@ public class LoanController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
+    }
+
+    @GetMapping("/my-loans")
+    public ResponseEntity<List<Loan>> getMyLoans() {
+        List<Loan> myLoans = loanService.getMyLoans();
+        return ResponseEntity.ok(myLoans);
     }
 }

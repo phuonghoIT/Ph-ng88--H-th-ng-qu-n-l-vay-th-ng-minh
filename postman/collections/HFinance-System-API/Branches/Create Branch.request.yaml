@@ -1,0 +1,19 @@
+$kind: http-request
+name: Create Branch
+method: POST
+url: '{{baseUrl}}/api/branches'
+order: 3000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "branchName": "Chi nhánh Hà Nội",
+      "address": "123 Phố Huế, Hà Nội",
+      "phone": "0241234567"
+    }
+  options:
+    raw:
+      language: json

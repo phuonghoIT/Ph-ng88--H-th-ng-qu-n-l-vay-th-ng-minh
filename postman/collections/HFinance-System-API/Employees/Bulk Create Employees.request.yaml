@@ -1,0 +1,36 @@
+$kind: http-request
+name: Bulk Create Employees
+method: POST
+url: '{{baseUrl}}/api/employees/bulk'
+order: 6000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    [
+      {
+        "fullName": "Nhân Viên 1",
+        "role": "Teller",
+        "status": "ACTIVE",
+        "branch": {"branchId": 1},
+        "user": {
+          "username": "nhanvien1",
+          "password": "password123"
+        }
+      },
+      {
+        "fullName": "Nhân Viên 2",
+        "role": "Loan Officer",
+        "status": "ACTIVE",
+        "branch": {"branchId": 1},
+        "user": {
+          "username": "nhanvien2",
+          "password": "password123"
+        }
+      }
+    ]
+  options:
+    raw:
+      language: json

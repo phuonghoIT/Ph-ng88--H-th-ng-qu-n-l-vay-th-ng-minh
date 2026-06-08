@@ -1,0 +1,20 @@
+$kind: http-request
+name: Create Collateral
+method: POST
+url: '{{baseUrl}}/api/collaterals'
+order: 3000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "assetType": "Bất động sản",
+      "estimatedValue": 500000000,
+      "conversionRate": 0.7000,
+      "loan": {"loanId": 1}
+    }
+  options:
+    raw:
+      language: json

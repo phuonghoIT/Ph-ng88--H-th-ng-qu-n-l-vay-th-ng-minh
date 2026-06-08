@@ -1,6 +1,7 @@
 package com.example.demo.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -50,6 +51,7 @@ public class Loan {
 
     // Kết nối Một-Nhiều sang bảng Lịch trả nợ [cite: 30]
     @OneToMany(mappedBy = "loan", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<RepaymentSchedule> repaymentSchedules;
 
 }

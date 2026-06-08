@@ -16,7 +16,7 @@ body:
       "branch": {"branchId": 1},
       "user": {
         "username": "tranthib",
-        "password": "password123"
+        "password": "1234567"
       }
     }
   options:

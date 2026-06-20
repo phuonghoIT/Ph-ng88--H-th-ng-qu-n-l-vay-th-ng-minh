@@ -78,4 +78,20 @@ public class BranchController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+
+    /**
+     * 🟡 5. Xóa  CHI NHÁNH (Dành cho Admin)
+     * DELETE http://localhost:8080/api/branches/5
+     */
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteBranch(@PathVariable Long id) {
+        try {
+            branchService.deleteBranch(id); // Gọi xuống service xử lý dọn dẹp và xóa
+            return ResponseEntity.ok("Xóa chi nhánh thành công!");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+
+    }
 }

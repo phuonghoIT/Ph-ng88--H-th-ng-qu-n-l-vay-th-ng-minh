@@ -50,13 +50,15 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 🌟 SỬA LỖI: Cho phép tất cả các request OPTIONS (preflight) đi qua
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        
                         .requestMatchers("/", "/index.html", "/app.js", "/styles.css").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/branches/**").permitAll()
                         .requestMatchers("/api/loans/my-loans").hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.POST, "/api/loans/**").hasRole("CUSTOMER")
+
                         .requestMatchers("/api/my-schedules/**").hasRole("CUSTOMER")
                         .requestMatchers("/api/my-payments/**").hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.GET, "/api/loan-products/**").hasAnyRole("CUSTOMER", "STAFF", "MANAGER")
                         .requestMatchers("/api/loan-products/**").hasRole("MANAGER")
                         .requestMatchers("/api/collaterals/**").hasRole("STAFF")
                         .requestMatchers("/api/loans/**").hasAnyRole("STAFF", "MANAGER")

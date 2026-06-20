@@ -5,6 +5,8 @@ const state = {
     username: null,
     role: null,
     customerId: null,
+    loanProducts: [],
+    customerLoans: [],
 };
 
 const view = document.getElementById('view');
@@ -20,6 +22,8 @@ logoutBtn.addEventListener('click', () => {
     state.role = null;
     state.username = null;
     state.customerId = null;
+    state.loanProducts = [];
+    state.customerLoans = [];
     updateAuthUI();
     renderLogin();
 });
@@ -91,15 +95,6 @@ async function apiFetch(path, options = {}) {
     }
 
     const url = path.startsWith('/') ? `${API_BASE}${path}` : path;
-    console.debug('apiFetch request', { 
-        method, 
-        url, 
-        hasAuth: !!state.authHeader,
-        authHeaderPresent: !!headers['Authorization'],
-        authHeaderValue: headers['Authorization'] ? headers['Authorization'].substring(0, 20) + '...' : 'NONE',
-        body: options.body, 
-        origin: window.location.origin 
-    });
 
     try {
         const response = await fetch(url, {
@@ -107,12 +102,10 @@ async function apiFetch(path, options = {}) {
             headers,
             mode: 'cors',
         });
-        console.debug('apiFetch response', { url, status: response.status, statusText: response.statusText });
-        
+
         if (!response.ok) {
             const errorText = await response.text();
             const message = errorText || `${response.status} ${response.statusText}`;
-            console.error('apiFetch failed response', { url, status: response.status, statusText: response.statusText, responseBody: errorText });
             const fetchError = new Error(message);
             fetchError.status = response.status;
             fetchError.statusText = response.statusText;
@@ -120,9 +113,17 @@ async function apiFetch(path, options = {}) {
             fetchError.method = method;
             throw fetchError;
         }
-        return response.json();
+
+        const text = await response.text();
+        if (!text) {
+            return null;
+        }
+        try {
+            return JSON.parse(text);
+        } catch {
+            return text;
+        }
     } catch (error) {
-        console.error('apiFetch failed', { url, method, error });
         if (!(error instanceof Error)) {
             error = new Error(String(error));
         }
@@ -131,7 +132,6 @@ async function apiFetch(path, options = {}) {
         throw error;
     }
 }
-
 function renderLogin() {
     showMessage('Hãy đăng nhập bằng tài khoản hiện có của bạn.', 'success');
     view.innerHTML = `
@@ -174,10 +174,6 @@ function renderLogin() {
             state.role = getRoleFromToken(payload);
             state.customerId = payload.customerId;
 
-            console.debug('Token payload:', payload);
-            console.debug('Extracted role:', state.role);
-            console.debug('State after login:', { username: state.username, role: state.role, customerId: state.customerId });
-
             localStorage.setItem('authHeader', state.authHeader);
             localStorage.setItem('username', state.username);
             localStorage.setItem('role', state.role);
@@ -205,7 +201,7 @@ function renderDashboard() {
     } else if (state.role === 'MANAGER') {
         renderManagerClient();
     } else {
-        view.innerHTML = `<div class="card"><h1>Role không xác định</h1><p>Token hiện chưa được giải mã chính xác.</p></div>`;
+        view.innerHTML = '<div class="card"><h1>Role không xác định</h1><p>Token hiện chưa được giải mã chính xác.</p></div>';
     }
 }
 
@@ -219,11 +215,12 @@ function createSection(title, content) {
 }
 
 function renderTable(data) {
-    if (!Array.isArray(data) || data.length === 0) {
+    const rowsData = Array.isArray(data) ? data : data ? [data] : [];
+    if (rowsData.length === 0) {
         return '<p>Không có dữ liệu.</p>';
     }
-    const columns = Array.from(new Set(data.flatMap(item => Object.keys(item))));
-    const rows = data.map(item => {
+    const columns = Array.from(new Set(rowsData.flatMap(item => Object.keys(item))));
+    const rows = rowsData.map(item => {
         const cells = columns.map(key => {
             const value = item[key];
             const display = typeof value === 'object' && value !== null ? JSON.stringify(value) : value;
@@ -238,53 +235,210 @@ function renderTable(data) {
 function renderCustomerClient() {
     view.innerHTML = `
         ${createSection('Trang khách hàng', `
-            <p>Khách hàng có thể xem các khoản vay hiện tại của mình.</p>
-            <div class="action-bar">
-                <button class="button" id="loadMyLoans">Tải khoản vay của tôi</button>
+            <p>Khách hàng có thể đăng ký khoản vay mới, đóng tiền theo kỳ hạn và xem danh sách khoản vay.</p>
+            <div class="grid-two">
+                <div class="card inner-card">
+                    <h3>Đăng ký khoản vay</h3>
+                    <form id="loanForm" class="stack">
+                        <label>Số tiền vay
+                            <input id="loanAmount" type="number" min="100000" step="100000" required />
+                        </label>
+                        <label>Ngày vay
+                            <input id="loanDate" type="date" required />
+                        </label>
+                        <label>Loại vay
+                            <select id="loanType">
+                                <option value="TIN_CHAP">Tín chấp</option>
+                                <option value="THE_CHAP">Thế chấp</option>
+                            </select>
+                        </label>
+                        <label>Gói vay
+                            <select id="loanProductSelect" required></select>
+                        </label>
+                        <button class="button" type="submit">Đăng ký khoản vay</button>
+                    </form>
+                </div>
+                <div class="card inner-card">
+                    <h3>Đóng tiền khoản vay</h3>
+                    <div class="stack">
+                        <label>Khoản vay
+                            <select id="paymentLoanSelect"></select>
+                        </label>
+                        <label>Kỳ thanh toán
+                            <select id="paymentScheduleSelect"></select>
+                        </label>
+                        <label>Số tiền
+                            <input id="paymentAmount" type="number" min="1000" step="1000" required />
+                        </label>
+                        <label>Phương thức
+                            <select id="paymentMethod">
+                                <option value="Tiền mặt">Tiền mặt</option>
+                                <option value="Chuyển khoản">Chuyển khoản</option>
+                            </select>
+                        </label>
+                        <label>Ngày thanh toán
+                            <input id="paymentDate" type="date" required />
+                        </label>
+                        <button class="button" id="payLoanBtn">Đóng tiền</button>
+                    </div>
+                </div>
             </div>
-            <div id="customerContent"></div>
+            <div class="card inner-card">
+                <div class="action-bar">
+                    <h3 style="margin:0">Khoản vay của tôi</h3>
+                    <button class="button secondary" id="refreshCustomerLoans">Tải lại</button>
+                </div>
+                <div id="customerContent"></div>
+            </div>
         `)}
     `;
 
-    document.getElementById('loadMyLoans').addEventListener('click', async () => {
-        const content = document.getElementById('customerContent');
-        content.innerHTML = '<p>Đang tải...</p>';
+    const today = new Date().toISOString().slice(0, 10);
+    document.getElementById('loanDate').value = today;
+    document.getElementById('paymentDate').value = today;
+
+    document.getElementById('loanForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const amount = Number(document.getElementById('loanAmount').value);
+        const loanDate = document.getElementById('loanDate').value;
+        const loanType = document.getElementById('loanType').value;
+        const selectedProductId = Number(document.getElementById('loanProductSelect').value);
+
+        if (!selectedProductId || !amount || !loanDate) {
+            showMessage('Vui lòng nhập đầy đủ thông tin khoản vay.', 'error');
+            return;
+        }
+
         try {
-            // No need to pass customerId, backend will get it from the token
-            const loans = await apiFetch('/api/loans/my-loans');
-            content.innerHTML = renderTable(loans);
-            showMessage('Đã tải danh sách khoản vay của bạn.', 'success');
+            await apiFetch('/api/loans', {
+                method: 'POST',
+                body: JSON.stringify({
+                    amount,
+                    loanDate,
+                    loanType,
+                    loanProduct: { loanProductId: selectedProductId },
+                }),
+            });
+            showMessage('Đăng ký khoản vay thành công!', 'success');
+            await loadCustomerData();
         } catch (error) {
-            renderFetchError(content, error, 'Lỗi khi tải khoản vay.');
+            showMessage(error.message || 'Đăng ký khoản vay thất bại.', 'error');
         }
     });
+
+    document.getElementById('refreshCustomerLoans').addEventListener('click', loadCustomerData);
+    document.getElementById('paymentLoanSelect').addEventListener('change', async (event) => {
+        const loanId = event.target.value;
+        const scheduleSelect = document.getElementById('paymentScheduleSelect');
+        scheduleSelect.innerHTML = '<option value="">Chọn kỳ hạn</option>';
+        if (!loanId) {
+            return;
+        }
+        try {
+            const schedules = await apiFetch(`/api/repayment-schedules?loanId=${loanId}`);
+            const list = Array.isArray(schedules) ? schedules : [];
+            scheduleSelect.innerHTML = `<option value="">Chọn kỳ hạn</option>${list.map(schedule => `<option value="${schedule.scheduleId}">${schedule.periodNumber} - ${schedule.dueDate} - ${schedule.status}</option>`).join('')}`;
+        } catch (error) {
+            scheduleSelect.innerHTML = '<option value="">Không thể tải kỳ hạn</option>';
+            showMessage(error.message || 'Không thể tải lịch thanh toán.', 'error');
+        }
+    });
+
+    document.getElementById('payLoanBtn').addEventListener('click', async () => {
+        const scheduleId = Number(document.getElementById('paymentScheduleSelect').value);
+        const amount = Number(document.getElementById('paymentAmount').value);
+        const paymentDate = document.getElementById('paymentDate').value;
+        const paymentMethod = document.getElementById('paymentMethod').value;
+
+        if (!scheduleId || !amount || !paymentDate) {
+            showMessage('Vui lòng chọn kỳ hạn và nhập số tiền.', 'error');
+            return;
+        }
+
+        try {
+            await apiFetch('/api/payments', {
+                method: 'POST',
+                body: JSON.stringify({
+                    amount,
+                    paymentDate,
+                    paymentMethod,
+                    repaymentSchedule: { scheduleId },
+                }),
+            });
+            showMessage('Đóng tiền thành công!', 'success');
+            await loadCustomerData();
+        } catch (error) {
+            showMessage(error.message || 'Đóng tiền thất bại.', 'error');
+        }
+    });
+
+    loadCustomerData();
+}
+
+async function loadCustomerData() {
+    try {
+        const loanProductSelect = document.getElementById('loanProductSelect');
+        if (loanProductSelect) {
+            try {
+                const products = await apiFetch('/api/loan-products');
+                state.loanProducts = Array.isArray(products) ? products : [];
+                loanProductSelect.innerHTML = state.loanProducts.map(product => `<option value="${product.loanProductId}">${product.name || product.productName || product.loanProductId}</option>`).join('');
+                loanProductSelect.disabled = false;
+            } catch (error) {
+                state.loanProducts = [];
+                loanProductSelect.innerHTML = '<option value="">Không thể tải gói vay</option>';
+                loanProductSelect.disabled = true;
+            }
+        }
+
+        if (loanProductSelect && !loanProductSelect.options.length) {
+            loanProductSelect.innerHTML = '<option value="">Chưa có gói vay</option>';
+            loanProductSelect.disabled = true;
+        }
+
+        const loans = await apiFetch('/api/loans/my-loans');
+        state.customerLoans = Array.isArray(loans) ? loans : [];
+        const customerContent = document.getElementById('customerContent');
+        if (customerContent) {
+            customerContent.innerHTML = renderTable(state.customerLoans);
+        }
+        const paymentLoanSelect = document.getElementById('paymentLoanSelect');
+        if (paymentLoanSelect) {
+            paymentLoanSelect.innerHTML = `<option value="">Chọn khoản vay</option>${state.customerLoans.map(loan => `<option value="${loan.loanId}">${loan.loanId} - ${loan.amount} - ${loan.status}</option>`).join('')}`;
+        }
+    } catch (error) {
+        const customerContent = document.getElementById('customerContent');
+        if (customerContent) {
+            renderFetchError(customerContent, error, 'Lỗi khi tải dữ liệu khách hàng.');
+        }
+    }
 }
 
 function renderStaffClient() {
     view.innerHTML = `
         ${createSection('Trang nhân viên (Staff)', `
-            <p>Staff có thể xem danh sách tài sản thế chấp, khoản vay và thanh toán.</p>
-            <div class="action-bar">
-                <button class="button" id="loadCollaterals">Tải tài sản thế chấp</button>
-                <button class="button" id="loadLoans">Tải khoản vay</button>
-                <button class="button" id="loadPayments">Tải thanh toán</button>
+            <p>Nhân viên có thể xem khoản vay hiện có và duyệt các khoản vay đang chờ phê duyệt.</p>
+            <div class="grid-two">
+                <div class="card inner-card">
+                    <h3>Danh sách khoản vay</h3>
+                    <div class="action-bar">
+                        <button class="button" id="loadLoans">Tải khoản vay</button>
+                        <button class="button" id="loadPayments">Tải thanh toán</button>
+                    </div>
+                    <div id="staffContent"></div>
+                </div>
+                <div class="card inner-card">
+                    <h3>Duyệt khoản vay</h3>
+                    <div class="stack">
+                        <label>Khoản vay chờ duyệt
+                            <select id="pendingLoanSelect"></select>
+                        </label>
+                        <button class="button" id="approveLoanBtn">Duyệt khoản vay</button>
+                    </div>
+                </div>
             </div>
-            <div id="staffContent"></div>
         `)}
     `;
-
-    document.getElementById('loadCollaterals').addEventListener('click', async () => {
-        const content = document.getElementById('staffContent');
-        content.innerHTML = '<p>Đang tải tài sản thế chấp...</p>';
-        try {
-            const data = await apiFetch('/api/collaterals');
-            content.innerHTML = renderTable(data);
-            showMessage('Đã tải danh sách tài sản thế chấp.', 'success');
-        } catch (error) {
-            content.innerHTML = '<p>Lỗi khi tải tài sản.</p>';
-            showMessage(error.message, 'error');
-        }
-    });
 
     document.getElementById('loadLoans').addEventListener('click', async () => {
         const content = document.getElementById('staffContent');
@@ -292,6 +446,9 @@ function renderStaffClient() {
         try {
             const data = await apiFetch('/api/loans');
             content.innerHTML = renderTable(data);
+            const pendingLoans = Array.isArray(data) ? data.filter(loan => loan.status === 'PENDING') : [];
+            const pendingLoanSelect = document.getElementById('pendingLoanSelect');
+            pendingLoanSelect.innerHTML = pendingLoans.map(loan => `<option value="${loan.loanId}">${loan.loanId} - ${loan.amount} - ${loan.customer?.fullName || 'Khách hàng'}</option>`).join('');
             showMessage('Đã tải danh sách khoản vay.', 'success');
         } catch (error) {
             content.innerHTML = '<p>Lỗi khi tải khoản vay.</p>';
@@ -311,6 +468,23 @@ function renderStaffClient() {
             showMessage(error.message, 'error');
         }
     });
+
+    document.getElementById('approveLoanBtn').addEventListener('click', async () => {
+        const loanId = document.getElementById('pendingLoanSelect').value;
+        if (!loanId) {
+            showMessage('Không có khoản vay nào để duyệt.', 'error');
+            return;
+        }
+        try {
+            await apiFetch(`/api/loans/${loanId}/status?status=ACTIVE`, { method: 'PATCH' });
+            showMessage('Đã duyệt khoản vay thành công.', 'success');
+            document.getElementById('loadLoans').click();
+        } catch (error) {
+            showMessage(error.message || 'Duyệt khoản vay thất bại.', 'error');
+        }
+    });
+
+    document.getElementById('loadLoans').click();
 }
 
 function renderManagerClient() {

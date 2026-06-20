@@ -1,13 +1,12 @@
 package com.example.demo.service;
 
 import com.example.demo.entity.*;
-
 import com.example.demo.repository.LoanProductRepository;
 import com.example.demo.repository.LoanRepository;
 import com.example.demo.repository.RepaymentScheduleRepository;
+import com.example.demo.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,38 +43,39 @@ public class LoanService {
 
     @Transactional
     public Loan updateLoanStatus(Long loanId, LoanStatus newStatus) {
-        // 1. Tìm khoản vay cũ đang nằm im trong Database (Tương đương biến OLD trong Trigger)
         Loan oldLoan = loanRepository.findById(loanId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy khoản vay!"));
         if (oldLoan.getStatus() == LoanStatus.PAID) {
             throw new RuntimeException("🔴 LỖI: Khoản vay đã tất toán xong, không được phép thay đổi trạng thái!");
         }
-
-        // 2. Tiến hành cập nhật trạng thái mới (Hành vi hợp lệ)
         oldLoan.setStatus(newStatus);
-
-        // 3. Bắn lệnh lưu xuống DB mượt mà
         return loanRepository.save(oldLoan);
     }
 
     public List<Loan> getMyLoans() {
-        // 1. Bốc thông tin Principal (đối tượng chứng thực) từ bộ nhớ gác cổng của Spring
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        String username;
-        if (principal instanceof UserDetails) {
-            username = ((UserDetails) principal).getUsername();
-        } else {
-            username = principal.toString();
-        }
-
-        // 2. Gọi Repository quét xuống DB lọc đúng ID của ông này
+        String username = ((CustomUserDetails) principal).getUsername();
         return loanRepository.findByCustomer_User_Username(username);
     }
 
     @Transactional
     public Loan createLoanAndGenerateSchedule(Loan newLoan) {
-        // 🌟 SỬA BƯỚC 1 + 2: Tìm gói sản phẩm thật từ DB lên trước để có cấu hình lãi suất và tháng
+        // 🌟 BƯỚC 1: LẤY THÔNG TIN NGƯỜI DÙNG TỪ TOKEN (Bất khả xâm phạm)
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        CustomUserDetails userDetails = (CustomUserDetails) principal;
+        Long customerId = userDetails.getCustomerId();
+
+        // Nếu người đăng nhập không phải là khách hàng (ví dụ: STAFF), cấm tạo vay
+        if (customerId == null) {
+            throw new IllegalStateException("Chỉ có khách hàng mới được phép đăng ký khoản vay.");
+        }
+
+        // 🌟 BƯỚC 2: TẠO ĐỐI TƯỢNG CUSTOMER ĐÁNG TIN CẬY VÀ GHI ĐÈ
+        Customer authenticatedCustomer = new Customer();
+        authenticatedCustomer.setCustomerId(customerId);
+        newLoan.setCustomer(authenticatedCustomer); // Ghi đè, không tin frontend
+
+        // --- Các logic còn lại giữ nguyên ---
         if (newLoan.getLoanProduct() == null || newLoan.getLoanProduct().getLoanProductId() == null) {
             throw new RuntimeException("🔴 LỖI: Khoản vay đăng ký bắt buộc phải chọn một gói sản phẩm hợp lệ!");
         }
@@ -83,43 +83,39 @@ public class LoanService {
         LoanProduct product = loanProductRepository.findById(newLoan.getLoanProduct().getLoanProductId())
                 .orElseThrow(() -> new RuntimeException("🔴 LỖI: Không tìm thấy gói sản phẩm vay trên hệ thống!"));
 
-        // Gán ngược gói sản phẩm đầy đủ thông tin vào đối tượng vay trước khi lưu
         newLoan.setLoanProduct(product);
-
-        // Bây giờ mới lưu khoản vay xuống DB để lấy loan_id thật
         Loan savedLoan = loanRepository.save(newLoan);
 
-        // 3. Tiến hành lấy cấu hình làm toán (Bảo đảm 100% không lo bị Null nữa!)
         int duration = product.getDurationMonths();
         BigDecimal interestRate = product.getInterestRate();
-
         BigDecimal allAmount = savedLoan.getAmount();
         BigDecimal principalPerMonth = allAmount.divide(BigDecimal.valueOf(duration), 2, RoundingMode.HALF_UP);
         BigDecimal remaining = allAmount;
         LocalDate loanDate = savedLoan.getLoanDate();
-
         List<RepaymentSchedule> schedulesList = new ArrayList<>();
+        BigDecimal monthlyRate = interestRate.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP)
+                .divide(BigDecimal.valueOf(12), 6, RoundingMode.HALF_UP);
 
-        // 4. Vòng lặp FOR bên dưới của em viết RẤT CHUẨN, giữ nguyên 100% không cần sửa gì cả ...
         for (int period = 1; period <= duration; period++) {
-            BigDecimal monthlyRate = interestRate.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP)
-                    .divide(BigDecimal.valueOf(12), 6, RoundingMode.HALF_UP);
             BigDecimal interestAmount = remaining.multiply(monthlyRate).setScale(2, RoundingMode.HALF_UP);
-
             LocalDate dueDates = loanDate.plusMonths(period);
-
+            BigDecimal currentPrincipal;
+            if (period == duration) {
+                currentPrincipal = remaining;
+            } else {
+                currentPrincipal = principalPerMonth;
+            }
             RepaymentSchedule schedule = RepaymentSchedule.builder()
                     .dueDate(dueDates)
                     .interestAmount(interestAmount)
                     .penaltyAmount(BigDecimal.ZERO)
                     .periodNumber(period)
-                    .principalAmount(principalPerMonth)
+                    .principalAmount(currentPrincipal)
                     .status(ScheduleStatus.UNPAID)
                     .loan(savedLoan)
                     .build();
-
             schedulesList.add(schedule);
-            remaining = remaining.subtract(principalPerMonth);
+            remaining = remaining.subtract(currentPrincipal);
         }
 
         scheduleRepository.saveAll(schedulesList);

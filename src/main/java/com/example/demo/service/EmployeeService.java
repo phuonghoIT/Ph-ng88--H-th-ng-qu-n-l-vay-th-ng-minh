@@ -7,6 +7,7 @@ import com.example.demo.entity.User;
 import com.example.demo.repository.BranchRepository;
 import com.example.demo.repository.EmployeeRepository;
 import com.example.demo.repository.LoanRepository;
+import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,9 @@ public class EmployeeService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private UserRepository userRepository;
 
     // =========================================================================
     // PHẦN 1: CÁC HÀM NGHIỆP VỤ CRUD CƠ BẢN (ĐỂ PHỤC VỤ CONTROLLER)
@@ -77,19 +81,41 @@ public class EmployeeService {
     }
 
     /**
-     * 🟡 Cập nhật thông tin nhân viên cơ bản (Tên, vai trò, trạng thái)
+     * 🟡 Cập nhật thông tin nhân viên cơ bản (Tên, vai trò, trạng thái) và Điều chuyển
      */
     @Transactional
     public Employee updateEmployee(Long id, Employee updatedData) {
         Employee existingEmployee = this.getEmployeeById(id);
 
-        if ((EmployeeStatus.INACTIVE)==(existingEmployee.getStatus())) {
+        if ((EmployeeStatus.INACTIVE) == (existingEmployee.getStatus())) {
             throw new RuntimeException("🔴 LỖI: Nhân viên này đã nghỉ việc, thông tin lịch sử bị khóa!");
         }
+
+        // --- TRIGGER TỰ ĐỘNG BÀN GIAO CÔNG VIỆC KHI ĐỔI CHI NHÁNH ---
+        if (updatedData.getBranch() != null && updatedData.getBranch().getBranchId() != null) {
+            Long newBranchId = updatedData.getBranch().getBranchId();
+            Long oldBranchId = existingEmployee.getBranch().getBranchId();
+            
+            if (!newBranchId.equals(oldBranchId)) {
+                // Kích hoạt nghiệp vụ điều chuyển và bàn giao
+                this.ship_work_same_branch(id, newBranchId);
+                
+                // Vì existingEmployee đã bị thay đổi chi nhánh trong hàm ship_work_same_branch,
+                // ta cần lấy lại dữ liệu mới nhất từ DB để các thao tác cập nhật bên dưới
+                // không vô tình ghi đè lại chi nhánh cũ.
+                existingEmployee = this.getEmployeeById(id);
+            }
+        }
+        // --- KẾT THÚC TRIGGER ---
 
         existingEmployee.setFullName(updatedData.getFullName());
         existingEmployee.setRole(updatedData.getRole());
         existingEmployee.setStatus(updatedData.getStatus());
+
+        // Đồng bộ role sang cho User nếu có thay đổi
+        if (existingEmployee.getUser() != null && !existingEmployee.getRole().equals(existingEmployee.getUser().getRole())) {
+            existingEmployee.getUser().setRole(existingEmployee.getRole());
+        }
 
         return employeeRepository.save(existingEmployee);
     }
@@ -138,6 +164,9 @@ public class EmployeeService {
     public Employee createEmployeeWithAccount(Employee employee) {
         if (employee.getUser() != null) {
             User account = employee.getUser();
+            if (userRepository.existsByUsername(account.getUsername())) {
+                throw new IllegalArgumentException("LỖI: Username '" + account.getUsername() + "' đã được sử dụng!");
+            }
 
             // 1. Ép băm mật khẩu bảo mật chuẩn BCrypt
             account.setPassword(passwordEncoder.encode(account.getPassword()));

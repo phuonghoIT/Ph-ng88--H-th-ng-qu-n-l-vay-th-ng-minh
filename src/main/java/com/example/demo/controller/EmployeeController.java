@@ -85,6 +85,8 @@ public class EmployeeController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+
+    // 6. tuyển hàng loạt
     @PostMapping("/bulk")
     public ResponseEntity<?> createMultipleEmployees(@Valid @RequestBody List<Employee> employeeList) {
         // (Lưu ý: Nếu file Entity của em tên là Employees thì đổi chữ Branches thành Employees nhé)

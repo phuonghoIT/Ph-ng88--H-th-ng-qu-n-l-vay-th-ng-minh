@@ -173,10 +173,33 @@ th {
     flex-wrap: wrap;
     gap: 12px;
     margin-bottom: 16px;
+    align-items: center;
 }
 
 .action-bar .button {
     min-width: 180px;
+}
+
+.grid-two {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.inner-card {
+    margin-bottom: 0;
+}
+
+.stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.stack label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 pre {
@@ -187,4 +210,10 @@ pre {
     overflow-x: auto;
     font-size: 0.92rem;
     line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+    .grid-two {
+        grid-template-columns: 1fr;
+    }
 }

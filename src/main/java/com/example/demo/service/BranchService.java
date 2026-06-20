@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.entity.Branch;
 import com.example.demo.repository.BranchRepository;
+import com.example.demo.repository.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +12,9 @@ import java.util.List;
 public class BranchService {
     @Autowired
     private BranchRepository branchRepository;
+
+    @Autowired
+    private EmployeeRepository employeeRepository;
 
     public List<Branch> getAllBranches() {
         return branchRepository.findAll(); // Gọi hàm có sẵn của Repo
@@ -39,6 +43,15 @@ public class BranchService {
 
         // Bước C: Lưu lại xuống Database
         return branchRepository.save(existingBranch);
+    }
+
+    public void deleteBranch(Long id){
+        Branch existingBranch = branchRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("🔴 LỖI: Chi nhánh ID " + id + " không tồn tại!"));
+        employeeRepository.shipEmployeesToBranch99(id);
+        branchRepository.delete(existingBranch);
+
+
     }
 
 }

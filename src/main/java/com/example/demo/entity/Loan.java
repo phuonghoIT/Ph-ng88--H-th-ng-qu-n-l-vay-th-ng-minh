@@ -41,7 +41,7 @@ public class Loan {
 
     // Khóa ngoại trỏ sang bảng Staff (Nhân viên quản lý) [cite: 20, 80]
     @ManyToOne
-    @JoinColumn(name = "employee_id", nullable = false)
+    @JoinColumn(name = "employee_id", nullable = true)
     private Employee employee;
 
     // Khóa ngoại trỏ sang bảng LoanProducts (Gói vay áp dụng) [cite: 23, 155]

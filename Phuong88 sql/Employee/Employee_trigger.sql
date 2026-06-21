@@ -86,8 +86,8 @@ BEGIN
     -- Lấy chi nhánh của nhân viên sắp bị sa thải
     SELECT branch_id INTO v_old_branch_id FROM employees WHERE employee_id = p_employee_id;
 
-    -- Tìm người rảnh nhất trong cùng chi nhánh để nhận bàn giao
-    SELECT employee_id INTO v_new_handler_id
+    -- SỬA LỖI: Thêm e. vào trước employee_id để tránh lỗi ambiguous
+    SELECT e.employee_id INTO v_new_handler_id
     FROM employees e
     LEFT JOIN loans l ON e.employee_id = l.employee_id
     WHERE e.status = 'ACTIVE' AND e.branch_id = v_old_branch_id AND e.employee_id != p_employee_id
@@ -95,16 +95,30 @@ BEGIN
     ORDER BY COUNT(l.loan_id) ASC
     LIMIT 1;
 
-    -- Chặn nếu không có ai để bàn giao
-    IF v_new_handler_id IS NULL THEN
-        RAISE EXCEPTION '🔴 LỖI DB: Không thể sa thải nhân viên ID % vì không có ai trong chi nhánh để nhận bàn giao.', p_employee_id;
+    -- Chặn nếu không có ai để bàn giao VÀ nhân viên này đang quản lý khoản vay
+    IF v_new_handler_id IS NULL AND EXISTS (SELECT 1 FROM loans WHERE employee_id = p_employee_id) THEN
+        RAISE EXCEPTION '🔴 LỖI DB: Không thể sa thải nhân viên ID % vì không có ai trong chi nhánh để nhận bàn giao các khoản vay.', p_employee_id;
     END IF;
 
-    -- Bàn giao các khoản vay
-    UPDATE loans SET employee_id = v_new_handler_id WHERE employee_id = p_employee_id;
+    -- Bàn giao các khoản vay (nếu có người nhận)
+    IF v_new_handler_id IS NOT NULL THEN
+        UPDATE loans SET employee_id = v_new_handler_id WHERE employee_id = p_employee_id;
+    END IF;
 
     -- Xóa mềm (Soft Delete)
     UPDATE employees SET status = 'INACTIVE' WHERE employee_id = p_employee_id;
 
 END;
 $$ LANGUAGE plpgsql;
+
+
+-- Hàm đơn giản chỉ để ném lỗi
+CREATE OR REPLACE FUNCTION prevent_employee_hard_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Ném ra lỗi và hướng dẫn cách làm đúng
+    RAISE EXCEPTION 'LỖI DB: Xóa vật lý nhân viên bị cấm để bảo toàn lịch sử.'
+        USING HINT = 'Để cho nhân viên nghỉ việc, hãy sử dụng hàm: SELECT fire_employee_and_reassign_loans(employee_id);';
+END;
+$$ LANGUAGE plpgsql;
+

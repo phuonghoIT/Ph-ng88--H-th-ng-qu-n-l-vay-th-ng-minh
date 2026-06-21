@@ -17,7 +17,9 @@ public class CollateralService {
 
     @Autowired
     private CollateralRepository collateralRepository;
-    private LoanRepository loanRepository ;
+
+    @Autowired // SỬA LỖI: Thêm @Autowired để Spring inject LoanRepository
+    private LoanRepository loanRepository;
 
     public List<Collateral> getAllCollaterals() {
         return collateralRepository.findAll();
@@ -30,42 +32,29 @@ public class CollateralService {
 
     @Transactional
     public Collateral createCollateral(Collateral newCollateral) {
-
-        // =================================================================
-        // QUY TẮC 1: KIỂM TRA GIÁ TRỊ ƯỚC TÍNH CỦA TÀI SẢN
-        // Tương đương: CHECK (estimated_value > 0)
-        // =================================================================
-        if (newCollateral.getEstimatedValue() == null || newCollateral.getEstimatedValue().compareTo(BigDecimal.ZERO) <= 0) {
-            // Ném ra một ngoại lệ để dừng quá trình và báo lỗi.
-            throw new IllegalArgumentException("LỖI LOGIC: Giá trị ước tính của tài sản thế chấp phải lớn hơn 0.");
-        }
-
-        // =================================================================
-        // QUY TẮC 2: KIỂM TRA LOẠI CỦA KHOẢN VAY LIÊN QUAN
-        // =================================================================
-
-        // 2a. Kiểm tra xem đối tượng đầu vào có gắn với một khoản vay không.
+        // 1. Kiểm tra xem đối tượng đầu vào có gắn với một khoản vay không.
         if (newCollateral.getLoan() == null || newCollateral.getLoan().getLoanId() == null) {
             throw new IllegalArgumentException("LỖI LOGIC: Tài sản thế chấp phải được gắn vào một khoản vay hợp lệ.");
         }
 
         Long loanId = newCollateral.getLoan().getLoanId();
 
-        // 2b. Lấy thông tin khoản vay ĐẦY ĐỦ từ Database.
-        // Đây là bước quan trọng để đảm bảo dữ liệu là đáng tin cậy, không tin vào dữ liệu thô từ client.
+        // 2. Lấy thông tin khoản vay ĐẦY ĐỦ từ Database.
         Loan loan = loanRepository.findById(loanId)
                 .orElseThrow(() -> new RuntimeException("LỖI LOGIC: Không tìm thấy khoản vay với ID: " + loanId + " để gắn tài sản thế chấp."));
 
-        // 2c. Kiểm tra loại khoản vay.
+        // 3. SỬA LỖI: Kiểm tra loại khoản vay cho đúng với ENUM là THE_CHAP
         if (loan.getLoanType() != LoanType.THE_CHAP) {
-            // Ném ra ngoại lệ nếu loại khoản vay không phải là 'SECURED'.
-            throw new IllegalStateException("LỖI LOGIC: Chỉ có thể thêm tài sản thế chấp cho các khoản vay có loại là SECURED. " +
-                    "Khoản vay (ID: " + loanId + ") hiện đang có loại là \"" + loan.getLoanType() + "\".");
+            throw new IllegalStateException("LỖI LOGIC: Chỉ có thể thêm tài sản thế chấp cho các khoản vay có loại là 'THE_CHAP'. " +
+                    "Khoản vay (ID: " + loanId + ") hiện đang có loại là '" + loan.getLoanType() + "'.");
+        }
+        
+        // 4. Kiểm tra giá trị tài sản
+        if (newCollateral.getEstimatedValue() == null || newCollateral.getEstimatedValue().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("LỖI LOGIC: Giá trị ước tính của tài sản thế chấp phải lớn hơn 0.");
         }
 
-        // =================================================================
-        // Nếu tất cả các quy tắc đều được thỏa mãn, cho phép lưu vào DB.
-        // =================================================================
+        // 5. Nếu tất cả các quy tắc đều được thỏa mãn, cho phép lưu vào DB.
         return collateralRepository.save(newCollateral);
     }
 

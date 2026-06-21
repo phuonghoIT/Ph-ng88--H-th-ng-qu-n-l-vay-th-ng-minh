@@ -28,17 +28,22 @@ $$ LANGUAGE plpgsql;
 
 -- Kịch bản để phân quyền sẽ như thế này
 
+	SELECT * 
+	FROM users;
 
+	SELECT *
+	FROM loans;
+    
 
     -- Áp dụng vai trò 'CUSTOMER_ROLE' cho session này
-	    -- Bước 1: Xác thực người dùng 'nguyenvana'
-    SELECT role FROM authenticate_user_simple('nguyenvana', 'matkhaucuakhach');
+	    -- Bước 1: Xác thực người dùng 
+    SELECT role FROM authenticate_user_simple('cus2', 'cus2');
     
     SET ROLE CUSTOMER_ROLE;
 
     -- Cho PostgreSQL biết rằng người dùng của session này là 'nguyenvana'
     -- Lệnh này cực kỳ quan trọng để RLS hoạt động
-    SET SESSION AUTHORIZATION 'nguyenvana';
+    SET app.current_username = 'cus1';
 
 	    RESET ROLE;
     RESET SESSION AUTHORIZATION;

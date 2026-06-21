@@ -38,21 +38,5 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
-
--- 1. Cài đặt extension (chỉ cần chạy một lần, có thể cần quyền superuser)
-CREATE EXTENSION IF NOT EXISTS pg_cron;
-
--- 2. Lập lịch để chạy hàm 'apply_overdue_penalties' vào lúc 00:05 mỗi ngày
--- '5 0 * * *' là cú pháp cron cho "5 phút sau nửa đêm, mỗi ngày"
-SELECT cron.schedule(
-    'daily-overdue-penalty-job',        -- Tên của công việc (để dễ quản lý)
-    '10 seconds',                        -- Lịch trình (Cron syntax)
-    'SELECT apply_overdue_penalties();' -- Lệnh SQL cần thực thi
-);
-
--- Để xem lại các công việc đã lập lịch:
--- SELECT * FROM cron.job;
-
--- Để hủy lịch, bạn có thể dùng:
--- SELECT cron.unschedule('daily-overdue-penalty-job');
+SELECT apply_overdue_penalties();
+        

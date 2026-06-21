@@ -12,6 +12,30 @@ CREATE ROLE MANAGER_ROLE;
 GRANT STAFF_ROLE TO MANAGER_ROLE;
 
 
+GRANT EXECUTE ON FUNCTION create_customer_and_account(
+    VARCHAR, -- p_full_name
+    VARCHAR, -- p_address
+    VARCHAR, -- p_sdt
+    VARCHAR, -- p_identity_number
+    VARCHAR, -- p_job
+    VARCHAR, -- p_username
+    VARCHAR  -- p_plain_password
+) TO PUBLIC;
+
+
+-- 2. Chỉ có vai trò STAFF và MANAGER mới được phép tạo tài khoản cho NHÂN VIÊN mới.
+-- (Giả sử hàm tạo nhân viên của bạn nằm trong file Employee_trigger.sql và có tên là create_employee_and_account)
+-- Lưu ý: Tôi sẽ cần đọc lại file Employee_trigger.sql để có chữ ký chính xác.
+-- Giả sử chữ ký là:
+GRANT EXECUTE ON FUNCTION create_employee_and_account(
+    VARCHAR, -- p_full_name
+    VARCHAR, -- p_role
+    
+    VARCHAR, -- p_username
+    VARCHAR,  -- p_plain_password
+    BIGINT  -- p_branch_id
+) TO STAFF_ROLE;
+
 -- =================================================================
 -- QUYỀN CỦA KHÁCH HÀNG (CUSTOMER_ROLE)
 -- =================================================================
@@ -27,7 +51,8 @@ GRANT USAGE, SELECT ON SEQUENCE loans_loan_id_seq, payments_payment_id_seq TO CU
 -- QUYỀN CỦA NHÂN VIÊN (STAFF_ROLE)
 -- =================================================================
 -- Được xem, thêm, sửa trên hầu hết các bảng nghiệp vụ
-GRANT SELECT, INSERT, UPDATE ON customers, loans, repayment_schedules, payments, collaterals TO STAFF_ROLE;
+
+GRANT SELECT, INSERT, UPDATE ON customers, loans, repayment_schedules, payments, collaterals, employees, users TO STAFF_ROLE;
 -- Được xem thông tin nhân viên và chi nhánh
 GRANT SELECT ON employees, branches TO STAFF_ROLE;
 -- Được sử dụng tất cả các sequence
@@ -49,16 +74,35 @@ GRANT SELECT, INSERT, UPDATE ON loan_products, branches TO MANAGER_ROLE;
 ALTER TABLE loans ENABLE ROW LEVEL SECURITY;
 
 -- 2. Tạo một "Chính sách" (Policy) cho vai trò CUSTOMER_ROLE
+-- Xóa policy cũ
+DROP POLICY IF EXISTS customer_can_see_own_loans ON loans;
+
+-- Tạo policy mới, gọi hàm an toàn
 CREATE POLICY customer_can_see_own_loans
-ON loans                            -- Áp dụng trên bảng 'loans'
-FOR SELECT                         -- Chỉ cho hành động SELECT
-TO CUSTOMER_ROLE                   -- Chỉ áp dụng cho vai trò CUSTOMER_ROLE
-USING (                            -- Với điều kiện là:
-    -- Cột customer_id trong bảng loans phải bằng với customer_id
-    -- của người dùng đang thực hiện truy vấn.
-    customer_id = (
-        SELECT customer_id
-        FROM users
-        WHERE username = current_user -- current_user là biến đặc biệt của Postgres, trả về tên user của session hiện tại
-    )
+ON loans
+FOR SELECT
+TO CUSTOMER_ROLE
+USING (
+    -- Chỉ cần so sánh customer_id của khoản vay với kết quả của hàm
+    customer_id = get_current_customer_id()
 );
+
+
+
+CREATE OR REPLACE FUNCTION get_current_customer_id()
+RETURNS BIGINT
+LANGUAGE plpgsql
+SECURITY DEFINER -- 👈 Chạy với quyền của người tạo hàm (superuser)
+AS $$
+BEGIN
+    -- Hàm này có thể đọc bảng 'users' một cách an toàn
+    RETURN (
+        SELECT customer_id
+        FROM public.users -- Chỉ định rõ schema để tăng bảo mật
+        WHERE username = current_setting('app.current_username', true) -- 'true' để không báo lỗi nếu biến chưa tồn tại
+    );
+END;
+$$;
+
+-- Cấp quyền cho các vai trò được phép gọi hàm này
+GRANT EXECUTE ON FUNCTION get_current_customer_id() TO CUSTOMER_ROLE, STAFF_ROLE, MANAGER_ROLE;

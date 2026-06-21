@@ -2,8 +2,8 @@ CREATE OR REPLACE FUNCTION prevent_customer_deletion()
 RETURNS TRIGGER AS $$
 BEGIN
     -- Ném ra một ngoại lệ để hủy bỏ hoàn toàn thao tác DELETE.
-    RAISE EXCEPTION 'LỖI DB (P0017): Xóa vật lý khách hàng (ID: %) bị cấm tuyệt đối để bảo toàn lịch sử và tính toàn vẹn dữ liệu.', OLD.customer_id
-        USING HINT = 'Thay vì xóa, hãy xem xét việc cập nhật trạng thái của khách hàng thành INACTIVE.';
+    RAISE EXCEPTION 'LỖI DB (P0017): Xóa vật lý khách hàng (ID: %) bị cấm tuyệt đối để bảo toàn lịch sử và tính toàn vẹn dữ liệu.', OLD.customer_id;
+        
 END;
 $$ LANGUAGE plpgsql;
 

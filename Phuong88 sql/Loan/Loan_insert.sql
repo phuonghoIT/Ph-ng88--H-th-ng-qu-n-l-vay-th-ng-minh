@@ -5,7 +5,7 @@ CREATE OR REPLACE FUNCTION public.create_loan_and_generate_schedules(
     p_loan_product_id BIGINT,
     p_amount NUMERIC,
     p_loan_date DATE,
-    p_loan_type VARCHAR
+    p_loan_type loan_type
 )
 RETURNS BIGINT -- Trả về ID của khoản vay vừa được tạo
 AS $$
@@ -94,6 +94,6 @@ SELECT public.create_loan_and_generate_schedules(
     1,          -- p_employee_id: Nhân viên quản lý
     1,          -- p_loan_product_id: Gói vay áp dụng
     50000000,   -- p_amount: Số tiền vay
-    '2024-01-01', -- p_loan_date: Ngày vay
-    'TIN_CHAP'  -- p_loan_type: Loại vay
+    CURRENT_DATE, -- p_loan_date: Ngày vay
+    'UNSERCURED'  -- p_loan_type: Loại vay
 );

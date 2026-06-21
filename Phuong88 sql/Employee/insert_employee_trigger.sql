@@ -35,13 +35,13 @@ BEGIN
 
     -- Bước 2: Insert vào bảng users với employee_id vừa có
     -- "Trigger" đồng bộ Role và lưu mật khẩu thô được thực hiện tại đây
-    INSERT INTO users (username, password, role, employee_id, enabled)
+    INSERT INTO users (username, password, role, employee_id)
     VALUES (
         p_username, 
         p_plain_password, -- 👈 Lưu thẳng mật khẩu thô
         p_role,           -- 👈 "Trigger" đồng bộ Role
-        v_employee_id,
-        true              -- Kích hoạt tài khoản
+        v_employee_id
+             -- Kích hoạt tài khoản
     );
 
     -- Trả về ID của nhân viên mới
@@ -52,9 +52,7 @@ $$ LANGUAGE plpgsql;
 
 
 SELECT public.create_employee_and_account_plaintext(
-    'Lê Thị A', 
-    'lta@hfinance.com', 
-    '0912345678', 
+    'Lê Thị A',  
     'STAFF', 
     'lethia', 
     'password123',

@@ -22,7 +22,7 @@ BEGIN
     -- Dùng OLD.loan_id vì nó không thể bị thay đổi (đã được kiểm tra ở trên).
     SELECT status INTO loan_status_of_collateral
     FROM loans
-    WHERE id = OLD.loan_id;
+    WHERE loan_id = OLD.loan_id;
 
     -- Nếu trạng thái không phải là 'PENDING'...
     IF loan_status_of_collateral <> 'PENDING' THEN

@@ -2,7 +2,7 @@
 CREATE OR REPLACE FUNCTION prevent_schedule_deletion()
 RETURNS TRIGGER AS $$
 BEGIN
-    RAISE EXCEPTION 'LỖI DB (P0006): Xóa một kỳ hạn trong lịch trả nợ (ID: %) bị cấm tuyệt đối để bảo toàn lịch sử giao dịch.', OLD.id;
+    RAISE EXCEPTION 'LỖI DB (P0006): Xóa một kỳ hạn trong lịch trả nợ (ID: %) bị cấm tuyệt đối để bảo toàn lịch sử giao dịch.', OLD.schedule_id;
 END;
 $$ LANGUAGE plpgsql;
 

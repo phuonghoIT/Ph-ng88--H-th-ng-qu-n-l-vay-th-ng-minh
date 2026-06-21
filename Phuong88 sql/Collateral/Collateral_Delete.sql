@@ -12,7 +12,7 @@ BEGIN
     -- Dùng OLD vì đây là dữ liệu của dòng sắp bị xóa.
     SELECT status INTO loan_status_of_collateral
     FROM loans
-    WHERE id = OLD.loan_id;
+    WHERE loan_id = OLD.loan_id;
 
     -- Nếu trạng thái là 'ACTIVE', 'PAID', hoặc các trạng thái "khóa" khác...
     IF loan_status_of_collateral IN ('ACTIVE', 'PAID') THEN

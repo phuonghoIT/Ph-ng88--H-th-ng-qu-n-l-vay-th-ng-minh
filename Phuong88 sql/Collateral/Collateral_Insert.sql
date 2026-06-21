@@ -19,9 +19,9 @@ BEGIN
     -- =================================================================
 
     -- Dùng 'loan_id' từ dòng collateral mới để truy vấn sang bảng 'loans'.
-    SELECT type INTO loan_type_of_collateral
+    SELECT loan_type INTO loan_type_of_collateral
     FROM loans
-    WHERE id = NEW.loan_id;
+    WHERE loan_id = NEW.loan_id;
 
     -- Nếu khoản vay không phải là 'SECURED', ném ra lỗi.
     IF loan_type_of_collateral <> 'SECURED' THEN

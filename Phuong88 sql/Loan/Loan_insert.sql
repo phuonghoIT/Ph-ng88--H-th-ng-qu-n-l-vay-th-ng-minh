@@ -88,12 +88,11 @@ $$ LANGUAGE plpgsql;
 
 
 
--- Tạo một khoản vay 50,000,000 cho khách hàng có ID = 1
-SELECT public.create_loan_and_generate_schedules(
-    1,          -- p_customer_id: Khách hàng đang đăng nhập
-    1,          -- p_employee_id: Nhân viên quản lý
-    1,          -- p_loan_product_id: Gói vay áp dụng
-    50000000,   -- p_amount: Số tiền vay
-    CURRENT_DATE, -- p_loan_date: Ngày vay
-    'UNSERCURED'  -- p_loan_type: Loại vay
+-SELECT public.create_loan_and_generate_schedules(
+    2,          -- p_customer_id
+    8,          -- p_employee_id
+    1,          -- p_loan_product_id
+    50000000,   -- p_amount
+    (CURRENT_DATE - INTERVAL '3 months')::date, -- p_loan_date (SỬA LỖI)
+    'UNSECURED' -- p_loan_type (Sửa lỗi chính tả từ UNSERCURED)
 );

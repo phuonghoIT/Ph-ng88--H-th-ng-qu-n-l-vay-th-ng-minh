@@ -1,8 +1,6 @@
 -- Hàm này sẽ là "API" duy nhất để thêm nhân viên vào DB mới của bạn
 CREATE OR REPLACE FUNCTION public.create_employee_and_account_plaintext(
     p_full_name VARCHAR,
-    p_email VARCHAR,
-    p_phone VARCHAR,
     p_role VARCHAR,
     p_username VARCHAR,
     p_plain_password VARCHAR, -- Mật khẩu thô
@@ -26,11 +24,9 @@ BEGIN
     
     -- Bước 1: Insert vào bảng employees trước để lấy ID
     -- "Trigger" gán trạng thái ACTIVE được thực hiện ngay tại đây
-    INSERT INTO employees (full_name, email, phone, role, status, branch_id)
+    INSERT INTO employees (full_name, role, status, branch_id)
     VALUES (
-        p_full_name, 
-        p_email, 
-        p_phone, 
+        p_full_name,
         p_role, 
         'ACTIVE', -- 👈 "Trigger" gán trạng thái mặc định
         p_branch_id

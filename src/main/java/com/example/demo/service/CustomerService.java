@@ -34,22 +34,8 @@ public class CustomerService {
                 .orElseThrow(() -> new RuntimeException("🔴 LỖI: Không tìm thấy khách hàng có ID là " + id));
     }
 
-    /**
-     * 🔵 3. Đăng ký khách hàng mới tinh (Mở tài khoản)
-     * Nghiệp vụ: Chống trùng CCCD và tự kích hoạt 600 điểm tín dụng mặc định
-     */
-    @Transactional
-    public Customer createCustomer(Customer newCustomer) {
-        // 🌟 NGHIỆP VỤ 1: Kiểm tra xem số CCCD này đã có ông nào dùng chưa?
-        if (customersRepository.existsByIdentityNumber(newCustomer.getIdentityNumber())) {
-            throw new RuntimeException("🔴 LỖI: Số CCCD/Identity Number này đã tồn tại trên hệ thống!");
-        }
 
-        // 🌟 NGHIỆP VỤ 2: Người mới tinh chưa có lịch sử nợ, tự động cấp 600 điểm uy tín
-        newCustomer.setCreditScore(600);
 
-        return customersRepository.save(newCustomer);
-    }
 
     /**
      * 🟡 4. Cập nhật thông tin cá nhân khách hàng
@@ -95,9 +81,19 @@ public class CustomerService {
             // 3. Thiết lập mối quan hệ 2 chiều để JPA biết đường sinh khóa ngoại
             account.setCustomer(customer);
             customer.setUser(account);
-        }
+
+            // 🌟 NGHIỆP VỤ 1: Kiểm tra xem số CCCD này đã có ông nào dùng chưa?
+            if (customersRepository.existsByIdentityNumber(customer.getIdentityNumber())) {
+                throw new RuntimeException("🔴 LỖI: Số CCCD/Identity Number này đã tồn tại trên hệ thống!");
+            }
+
+            // 🌟 NGHIỆP VỤ 2: Người mới tinh chưa có lịch sử nợ, tự động cấp 600 điểm uy tín
+            customer.setCreditScore(600);
+
+            return customersRepository.save(customer);
+        } else throw new RuntimeException("Chưa ghi nhận tài khoản & mật khẩu!");
 
         // 4. Lưu một phát ăn cả hai bảng luôn nhờ Cascade!
-        return customersRepository.save(customer);
+
     }
 }

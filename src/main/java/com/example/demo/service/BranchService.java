@@ -5,6 +5,7 @@ import com.example.demo.repository.BranchRepository;
 import com.example.demo.repository.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -20,7 +21,7 @@ public class BranchService {
         return branchRepository.findAll(); // Gọi hàm có sẵn của Repo
     }
 
-    // Hàm tạo mới chi nhánh
+    @Transactional// Hàm tạo mới chi nhánh
     public Branch createBranch(Branch branch) {
         return branchRepository.save(branch); // Gọi hàm có sẵn của Repo
     }
@@ -31,7 +32,7 @@ public class BranchService {
         return branchRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("🔴 LỖI: Không tìm thấy chi nhánh nào có ID là " + id + " trên hệ thống!"));
     }
-
+    @Transactional
     public Branch updateBranch(Long id, Branch updatedData) {
         // Bước A: Phải dùng chính hàm getBranchById ở trên để check xem chi nhánh đó có tồn tại không
         Branch existingBranch = this.getBranchById(id);
@@ -44,7 +45,7 @@ public class BranchService {
         // Bước C: Lưu lại xuống Database
         return branchRepository.save(existingBranch);
     }
-
+    @Transactional
     public void deleteBranch(Long id){
         Branch existingBranch = branchRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("🔴 LỖI: Chi nhánh ID " + id + " không tồn tại!"));
